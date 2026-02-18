@@ -112,57 +112,50 @@
   <h1>Global Click Counter</h1>
   <div class="count" id="count">...</div>
   <br />
-  <button class="btn" id="btn" onclick="increment()" disabled>Click me</button>
+  <button class="btn" id="btn" disabled>Click me</button>
   <div class="status" id="status">Connecting...</div>
 </div>
 
-<!-- Firebase v9 compat SDK (no build step needed) -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script type="module">
+  import { initializeApp }                        from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+  import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
 
-<script>
-  // -------------------------------------------------------
-  // REPLACE the values below with your Firebase project config.
-  // See SETUP.md for step-by-step instructions.
-  // -------------------------------------------------------
   const firebaseConfig = {
-    apiKey:            "REPLACE_WITH_YOUR_API_KEY",
-    authDomain:        "REPLACE_WITH_YOUR_PROJECT_ID.firebaseapp.com",
-    databaseURL:       "https://REPLACE_WITH_YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-    projectId:         "REPLACE_WITH_YOUR_PROJECT_ID",
-    storageBucket:     "REPLACE_WITH_YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "REPLACE_WITH_YOUR_MESSAGING_SENDER_ID",
-    appId:             "REPLACE_WITH_YOUR_APP_ID"
+    apiKey:            "AIzaSyDbPVtou4q2xftwzU8I3HP0R2ch3-v-W4E",
+    authDomain:        "counter-48d7a.firebaseapp.com",
+    databaseURL:       "https://counter-48d7a-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId:         "counter-48d7a",
+    storageBucket:     "counter-48d7a.firebasestorage.app",
+    messagingSenderId: "1028154930672",
+    appId:             "1:1028154930672:web:1ac4a24f3161e2f56d9935"
   };
-  // -------------------------------------------------------
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-  const countRef = db.ref("clickCount");
+  const app      = initializeApp(firebaseConfig);
+  const db       = getDatabase(app);
+  const countRef = ref(db, "clickCount");
 
-  const countEl = document.getElementById("count");
-  const btnEl   = document.getElementById("btn");
+  const countEl  = document.getElementById("count");
+  const btnEl    = document.getElementById("btn");
   const statusEl = document.getElementById("status");
 
   // Real-time listener — all visitors see updates instantly
-  countRef.on("value", (snapshot) => {
+  onValue(countRef, (snapshot) => {
     const val = snapshot.val() ?? 0;
     countEl.textContent = val.toLocaleString();
     btnEl.disabled = false;
     statusEl.textContent = "Live";
     statusEl.className = "status live";
   }, (err) => {
-    statusEl.textContent = "Connection error — check your Firebase config";
+    statusEl.textContent = "Connection error";
     statusEl.className = "status";
     console.error(err);
   });
 
-  function increment() {
+  btnEl.addEventListener("click", () => {
     btnEl.disabled = true;
-    // transaction() is atomic — safe for many users clicking at the same time
-    countRef.transaction((current) => (current ?? 0) + 1)
+    // runTransaction is atomic — safe for many users clicking at the same time
+    runTransaction(countRef, (current) => (current ?? 0) + 1)
       .then(() => {
-        // Brief visual bump on the number
         countEl.classList.add("bump");
         setTimeout(() => countEl.classList.remove("bump"), 150);
         btnEl.disabled = false;
@@ -171,7 +164,7 @@
         console.error("Write failed:", err);
         btnEl.disabled = false;
       });
-  }
+  });
 </script>
 
 </body>
